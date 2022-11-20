@@ -1,0 +1,36 @@
+# fly.toml file generated for radpanda on 2022-11-20T20:54:37Z
+
+app = "radpanda"
+
+kill_signal = "SIGINT"
+kill_timeout = 5
+processes = []
+
+[env]
+  MASTODON_SERVER = "https://hachyderm.io"
+  TOOT_VISIBILITY = "public"
+  TOOT_TEXT = "Red Pandas are rad! Have a panda! #RedPanda"
+  TOOT_SCHEDULE = "@hourly"
+  METRICS_PORT = ":2112"
+
+
+[experimental]
+  allowed_public_ports = []
+  auto_rollback = true
+
+[[services]]
+  http_checks = []
+  internal_port = 2112
+  processes = ["radpanda"]
+  protocol = "tcp"
+  script_checks = []
+
+  [[services.tcp_checks]]
+    grace_period = "1s"
+    interval = "15s"
+    restart_limit = 0
+    timeout = "2s"
+
+[metrics]
+port = 2112
+path = "/metrics"
