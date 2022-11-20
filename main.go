@@ -24,13 +24,18 @@ type Configuration struct {
 
 func main() {
 	config := Configuration{}
-	flag.StringVar(&config.ServerUrl, "server", "", "The Mastodon Server")
-	flag.StringVar(&config.AccessToken, "token", "", "the app access token")
-	flag.StringVar(&config.MessageText, "message", "Red Pandas are rad! Have a panda!", "The message to send with each toot")
+	flag.StringVar(&config.ServerUrl, "server", "", "(Required) The Mastodon Server")
+	flag.StringVar(&config.AccessToken, "token", "", "(Required) The app access token")
+	flag.StringVar(&config.MessageText, "message", "Red Pandas are rad! Have a panda! #RedPanda", "The message to send with each toot")
 	flag.StringVar(&config.MessageVisibility, "visibility", "private", "The visibility of the toot (public, unlisted, private, direct)")
 	flag.BoolVar(&config.OneShot, "one-shot", false, "Single shot message")
 	flag.StringVar(&config.Schedule, "schedule", "@hourly", "A cron expression controlling when to send messages")
 	flag.Parse()
+
+	if config.AccessToken == "" || config.ServerUrl == "" {
+		flag.PrintDefaults()
+		return
+	}
 
 	rand.Seed(time.Now().UnixNano())
 

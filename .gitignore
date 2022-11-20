@@ -33,3 +33,6 @@ go.work
 #img store
 /img/
 *.DS_Store
+
+#builds
+/dist/
