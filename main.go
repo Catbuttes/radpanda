@@ -6,9 +6,13 @@ import (
 	"io/ioutil"
 	"log"
 	"math/rand"
+	"net/http"
 	"time"
 
 	mastodon "github.com/mattn/go-mastodon"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	cron "github.com/robfig/cron"
 )
 
@@ -20,7 +24,15 @@ type Configuration struct {
 	MessageVisibility string
 	Schedule          string
 	OneShot           bool
+	MetricsPort       string
 }
+
+var (
+	imgCount = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "radpanda_current_image_count",
+		Help: "The total number of images available to radpanda to post",
+	})
+)
 
 func main() {
 	config := Configuration{}
@@ -30,12 +42,25 @@ func main() {
 	flag.StringVar(&config.MessageVisibility, "visibility", "private", "The visibility of the toot (public, unlisted, private, direct)")
 	flag.BoolVar(&config.OneShot, "one-shot", false, "Single shot message")
 	flag.StringVar(&config.Schedule, "schedule", "@hourly", "A cron expression controlling when to send messages")
+	flag.StringVar(&config.MetricsPort, "metrics-address", ":2112", "The address and port to listen on for prometheus metrics")
 	flag.Parse()
 
 	if config.AccessToken == "" || config.ServerUrl == "" {
 		flag.PrintDefaults()
 		return
 	}
+
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		http.ListenAndServe(config.MetricsPort, nil)
+	}()
+
+	files, err := ioutil.ReadDir("img")
+	if err != nil {
+		log.Panic(err)
+	}
+
+	imgCount.Set(float64(len(files)))
 
 	rand.Seed(time.Now().UnixNano())
 
@@ -67,7 +92,9 @@ func process(config Configuration) {
 		log.Panic(err)
 	}
 
-	fileIdx := rand.Intn(len(files)+1) + 1
+	imgCount.Set(float64(len(files)))
+
+	fileIdx := rand.Intn(len(files))
 
 	attachment, err := client.UploadMedia(ctx, "img/"+files[fileIdx].Name())
 	if err != nil {
