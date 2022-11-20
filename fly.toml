@@ -9,7 +9,7 @@ processes = []
 [env]
   MASTODON_SERVER = "https://hachyderm.io"
   TOOT_VISIBILITY = "public"
-  TOOT_TEXT = "Red Pandas are rad! Have a panda! #RedPanda"
+  TOOT_TEXT = "'Red Pandas are rad! Have a panda! #RedPanda'"
   TOOT_SCHEDULE = "@hourly"
   METRICS_PORT = ":2112"
 
