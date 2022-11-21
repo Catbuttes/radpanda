@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/mattn/go-mastodon v0.0.6
 	github.com/prometheus/client_golang v1.14.0
-	github.com/robfig/cron v1.2.0
+	github.com/robfig/cron/v3 v3.0.1
 )
 
 require (

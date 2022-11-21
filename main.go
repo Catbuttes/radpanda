@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -15,7 +14,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	cron "github.com/robfig/cron"
+	cron "github.com/robfig/cron/v3"
 )
 
 type Configuration struct {
@@ -33,6 +32,16 @@ var (
 	imgCount = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "radpanda_current_image_count",
 		Help: "The total number of images available to radpanda to post",
+	})
+
+	mediaUploadTime = promauto.NewHistogram(prometheus.HistogramOpts{
+		Name: "radpanda_media_upload_time",
+		Help: "The time taken to upload media in seconds",
+	})
+
+	tootTime = promauto.NewHistogram(prometheus.HistogramOpts{
+		Name: "radpanda_toot_time",
+		Help: "The time taken to toot in seconds",
 	})
 )
 
@@ -83,8 +92,6 @@ func main() {
 
 	config := getConfig()
 
-	fmt.Printf("Running with config:\n-------\n%+v\n", config)
-
 	if config.MetricsPort != "" {
 		go func() {
 			http.Handle("/metrics", promhttp.Handler())
@@ -106,7 +113,7 @@ func main() {
 		return
 	} else {
 		scheduler := cron.New()
-		err := scheduler.AddFunc(config.Schedule, func() { process(config) })
+		_, err := scheduler.AddFunc(config.Schedule, func() { process(config) })
 		if err != nil {
 			log.Panic(err)
 		}
@@ -133,15 +140,20 @@ func process(config Configuration) {
 
 	fileIdx := rand.Intn(len(files))
 
+	mediaUploadStart := time.Now()
+
 	attachment, err := client.UploadMedia(ctx, "img/"+files[fileIdx].Name())
 	if err != nil {
 		log.Printf("Error Uploading Media, %s\n", files[fileIdx].Name())
 		log.Fatal(err)
 	}
 
+	mediaUploadTime.Observe(time.Since(mediaUploadStart).Seconds())
+
+	tootStart := time.Now()
 	toot := mastodon.Toot{
 		Status:     config.MessageText,
-		Visibility: "private",
+		Visibility: config.MessageVisibility,
 		MediaIDs: []mastodon.ID{
 			attachment.ID,
 		},
@@ -152,5 +164,7 @@ func process(config Configuration) {
 		log.Println("Error Tooting")
 		log.Fatal(err)
 	}
+
+	tootTime.Observe(time.Since(tootStart).Seconds())
 
 }
