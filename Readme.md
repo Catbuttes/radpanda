@@ -1,6 +1,6 @@
 # Radpanda
 
-Radpanda is a mastodon bot that will post an image from a local source on a configurable delay with a configurable message. It can be found at <a rel="me" href="https://hachyderm.io/@radpanda">Hachyderm.io/@RadPanda</a>
+Radpanda is a mastodon bot that will post an image from a local source on a configurable delay with a configurable message. It can be found at <a rel="me" href="https://botsin.space/@RadPanda">botsin.space/@RadPanda</a>
 
 ## Usage
 

@@ -7,7 +7,7 @@ kill_timeout = 5
 processes = []
 
 [env]
-  RADPANDA_SERVER = "https://hachyderm.io"
+  RADPANDA_SERVER = "https://botsin.space"
   RADPANDA_VISIBILITY = "public"
   RADPANDA_TEXT = "Red Pandas are rad! Have a panda! #RedPanda"
   RADPANDA_SCHEDULE = "@hourly"
