@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"time"
 
 	mastodon "github.com/mattn/go-mastodon"
@@ -34,26 +36,61 @@ var (
 	})
 )
 
-func main() {
+func getConfig() Configuration {
 	config := Configuration{}
 	flag.StringVar(&config.ServerUrl, "server", "", "(Required) The Mastodon Server")
 	flag.StringVar(&config.AccessToken, "token", "", "(Required) The app access token")
-	flag.StringVar(&config.MessageText, "message", "Red Pandas are rad! Have a panda! #RedPanda", "The message to send with each toot")
-	flag.StringVar(&config.MessageVisibility, "visibility", "private", "The visibility of the toot (public, unlisted, private, direct)")
+	flag.StringVar(&config.MessageText, "message", "", "The message to send with each toot")
+	flag.StringVar(&config.MessageVisibility, "visibility", "unlisted", "The visibility of the toot (public, unlisted, private, direct)")
 	flag.BoolVar(&config.OneShot, "one-shot", false, "Single shot message")
-	flag.StringVar(&config.Schedule, "schedule", "@hourly", "A cron expression controlling when to send messages")
-	flag.StringVar(&config.MetricsPort, "metrics-address", ":2112", "The address and port to listen on for prometheus metrics")
+	flag.StringVar(&config.Schedule, "schedule", "@every 1h", "A cron expression controlling when to send messages")
+	flag.StringVar(&config.MetricsPort, "metrics-address", "", "The address and port to listen on for prometheus metrics")
 	flag.Parse()
+
+	if config.AccessToken == "" {
+		config.AccessToken = os.Getenv("RADPANDA_TOKEN")
+	}
+
+	if config.ServerUrl == "" {
+		config.ServerUrl = os.Getenv("RADPANDA_SERVER")
+	}
 
 	if config.AccessToken == "" || config.ServerUrl == "" {
 		flag.PrintDefaults()
-		return
+		os.Exit(1)
 	}
 
-	go func() {
-		http.Handle("/metrics", promhttp.Handler())
-		http.ListenAndServe(config.MetricsPort, nil)
-	}()
+	if config.MessageText == "" {
+		config.MessageText = os.Getenv("RADPANDA_TEXT")
+	}
+
+	if config.MessageVisibility == "unlisted" {
+		config.MessageVisibility = os.Getenv("RADPANDA_VISIBILITY")
+	}
+
+	if config.Schedule == "@every 1h" {
+		config.Schedule = os.Getenv("RADPANDA_SCHEDULE")
+	}
+
+	if config.MetricsPort == "" {
+		config.MetricsPort = os.Getenv("RADPANDA_METRICS_PATH")
+	}
+
+	return config
+}
+
+func main() {
+
+	config := getConfig()
+
+	fmt.Printf("Running with config:\n-------\n%+v\n", config)
+
+	if config.MetricsPort != "" {
+		go func() {
+			http.Handle("/metrics", promhttp.Handler())
+			http.ListenAndServe(config.MetricsPort, nil)
+		}()
+	}
 
 	files, err := ioutil.ReadDir("img")
 	if err != nil {

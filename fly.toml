@@ -7,11 +7,11 @@ kill_timeout = 5
 processes = []
 
 [env]
-  MASTODON_SERVER = "https://hachyderm.io"
-  TOOT_VISIBILITY = "public"
-  TOOT_TEXT = "'Red Pandas are rad! Have a panda! #RedPanda'"
-  TOOT_SCHEDULE = "@hourly"
-  METRICS_PORT = ":2112"
+  RADPANDA_SERVER = "https://hachyderm.io"
+  RADPANDA_VISIBILITY = "public"
+  RADPANDA_TEXT = "Red Pandas are rad! Have a panda! #RedPanda"
+  RADPANDA_SCHEDULE = "@hourly"
+  RADPANDA_METRICS_PATH = ":2112"
 
 
 [experimental]
